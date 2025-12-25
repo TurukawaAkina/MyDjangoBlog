@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <article class="blog-post mb-5 shadow-sm p-4 bg-white rounded">
+                <h1 class="mb-3 fw-bold">{{ post.title }}</h1>
+
+                <div class="text-muted small mb-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="me-3">
+                            <i class="bi bi-person text-primary"></i>
+                            <strong>{{ post.author.nickname|default:post.author.username }}</strong>
+                            <span class="badge bg-warning text-dark border ms-1" title="等级">Lv.{{ post.author.level }}</span>
+                            {% if post.author.custom_title %}
+                            <span class="badge" style="background-color: {{ post.author.custom_title.color }};">
+                                <i class="{{ post.author.custom_title.icon_class }}"></i> {{ post.author.custom_title.name }}
+                            </span>
+                            {% endif %}
+                        </span>
+                        <span class="me-3"><i class="bi bi-calendar3"></i> {{ post.created_at|date:"Y-m-d H:i" }}</span>
+                        <span class="me-3"><i class="bi bi-folder2-open"></i>
+                            <a href="{% url 'blog:post_list' %}?category={{ post.category.id }}" class="text-decoration-none">
+                                <span class="badge bg-light text-dark border">{{ post.category.name }}</span>
+                            </a>
+                        </span>
+                    </div>
+                    <div>
+                        <span class="me-2"><i class="bi bi-eye"></i> {{ post.views }} 次阅读</span>
+                    </div>
+                </div>
+
+                {% if post.banner %}
+                <img src="{{ post.banner.url }}" class="img-fluid rounded mb-4 w-100" style="max-height: 450px; object-fit: cover;">
+                {% endif %}
+
+                <div class="post-content lh-lg mb-5" style="font-size: 1.1rem; color: #2c3e50;">
+                    {{ post.get_content_html|safe }}
+                </div>
+
+                <div class="text-center my-5 border-top pt-4">
+                    <button id="like-btn" class="btn {% if user in post.likes.all %}btn-primary{% else %}btn-outline-primary{% endif %} btn-lg rounded-pill px-5 shadow-sm" data-id="{{ post.pk }}">
+                        <i class="bi {% if user in post.likes.all %}bi-hand-thumbs-up-fill{% else %}bi-hand-thumbs-up{% endif %}"></i>
+                        点赞 <span id="like-count">{{ post.total_likes }}</span>
+                    </button>
+                    <p class="text-muted small mt-2">点赞可获得 3 点经验值！</p>
+                </div>
+
+                {% if post.author == user %}
+                <div class="mt-4 pt-3 border-top text-end">
+                    <a href="{% url 'blog:post_edit' post.pk %}" class="btn btn-sm btn-outline-secondary me-2">编辑</a>
+                    <a href="{% url 'blog:post_delete' post.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除这篇文章吗？')">删除</a>
+                </div>
+                {% endif %}
+            </article>
+
+            <div class="comments-section mb-5">
+                <h4 class="fw-bold mb-4"><i class="bi bi-chat-dots-fill me-2 text-primary"></i>全部评论 ({{ post.comments.count }})</h4>
+
+                {% for comment in comments %}
+                    <div class="card mb-3 border-0 shadow-sm" id="comment-{{ comment.id }}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center">
+                                    {% if comment.user.avatar %}
+                                        <img src="{{ comment.user.avatar.url }}" class="rounded-circle me-3" style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #eee;">
+                                    {% else %}
+                                        <div class="rounded-circle me-3 bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 45px; height: 45px;">
+                                            {{ comment.user.username|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold text-dark">
+                                            {{ comment.user.nickname|default:comment.user.username }}
+                                            <span class="badge rounded-pill bg-warning text-dark border ms-1 small" style="font-size: 0.65rem;">
+                                                Lv.{{ comment.user.level }}
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">{{ comment.created_at|timesince }}前</small>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-link text-primary text-decoration-none"
+                                   onclick="prepareReply({{ comment.id }}, '{{ comment.user.nickname|default:comment.user.username }}')">
+                                    <i class="bi bi-reply"></i> 回复
+                                </button>
+                            </div>
+                            <p class="card-text ps-5" style="white-space: pre-wrap; color: #4a4a4a;">{{ comment.content }}</p>
+
+                            {% for reply in comment.replies.all %}
+                                <div class="ms-5 mt-3 p-3 bg-light rounded-3 border-start border-primary border-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        {% if reply.user.avatar %}
+                                            <img src="{{ reply.user.avatar.url }}" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover;">
+                                        {% endif %}
+                                        <span class="fw-bold small text-dark">{{ reply.user.nickname|default:reply.user.username }}</span>
+                                        <small class="text-muted ms-2" style="font-size: 0.75rem;">{{ reply.created_at|date:"m-d H:i" }}</small>
+                                    </div>
+                                    <p class="mb-0 small text-secondary" style="white-space: pre-wrap;">{{ reply.content }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-5 bg-white rounded shadow-sm text-muted">
+                        <i class="bi bi-chat-square-text display-4"></i>
+                        <p class="mt-3">评论可获得 5 点经验值，快来升级吧！</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div id="comment-form-at" class="card p-4 shadow-sm border-0 bg-white mb-5">
+                <h4 id="reply-title" class="fw-bold mb-4">发表评论</h4>
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'blog:post_detail' post.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="parent_id" id="parent_id_input" value="">
+
+                        {{ comment_form|crispy }}
+
+                        <div class="d-flex align-items-center mt-3">
+                            <button type="submit" class="btn btn-primary px-5 rounded-pill shadow">提交评论</button>
+                            <button type="button" id="cancel-reply-btn" class="btn btn-link text-muted ms-3 text-decoration-none"
+                                    style="display:none;" onclick="resetReplyForm()">取消回复</button>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="text-center py-4 border rounded bg-light">
+                        <p class="mb-3 text-muted">登录后评论可赚取经验值！</p>
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary rounded-pill px-4">立即登录</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 回复功能逻辑
+    function prepareReply(commentId, displayName) {
+        document.getElementById('parent_id_input').value = commentId;
+        document.getElementById('reply-title').innerHTML = '<i class="bi bi-reply-fill"></i> 回复 <span class="text-primary">@' + displayName + '</span>';
+        document.getElementById('cancel-reply-btn').style.display = "inline-block";
+
+        // 平滑滚动到表单
+        window.scrollTo({
+            top: document.getElementById('comment-form-at').offsetTop - 100,
+            behavior: 'smooth'
+        });
+
+        // 自动聚焦输入框
+        const textarea = document.querySelector('#comment-form-at textarea');
+        if(textarea) textarea.focus();
+    }
+
+    function resetReplyForm() {
+        document.getElementById('parent_id_input').value = "";
+        document.getElementById('reply-title').innerText = "发表评论";
+        document.getElementById('cancel-reply-btn').style.display = "none";
+    }
+
+    // 点赞 AJAX 逻辑
+    const likeBtn = document.getElementById('like-btn');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const btn = this;
+            const likeCount = document.getElementById('like-count');
+            const icon = btn.querySelector('i');
+
+            fetch("{% url 'blog:post_like' post.pk %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    likeCount.innerText = data.count;
+                    if (data.action === 'liked') {
+                        btn.classList.replace('btn-outline-primary', 'btn-primary');
+                        icon.classList.replace('bi-hand-thumbs-up', 'bi-hand-thumbs-up-fill');
+                    } else {
+                        btn.classList.replace('btn-primary', 'btn-outline-primary');
+                        icon.classList.replace('bi-hand-thumbs-up-fill', 'bi-hand-thumbs-up');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("操作失败，请重试");
+            });
+        });
+    }
+</script>
+
+<style>
+    body { background-color: #f8f9fa; }
+    .post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .post-content pre { background-color: #272822; color: #f8f8f2; padding: 20px; border-radius: 8px; overflow-x: auto; margin: 20px 0; }
+    .badge { vertical-align: middle; }
+    /* 鼠标悬停卡片阴影加深 */
+    .card { transition: box-shadow 0.3s ease; }
+</style>
+{% endblock %}
