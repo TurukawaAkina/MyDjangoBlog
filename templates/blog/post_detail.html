@@ -5,8 +5,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-9">
+    <div class="row">
+        <div class="col-md-8">
             <article class="blog-post mb-5 shadow-sm p-4 bg-white rounded">
                 <h1 class="mb-3 fw-bold">{{ post.title }}</h1>
 
@@ -42,7 +42,9 @@
                     {{ post.get_content_html|safe }}
                 </div>
 
-                <div class="text-center my-5 border-top pt-4">
+                <div class="text-center my-5 border-top pt-4 position-relative">
+                    <div id="xp-animation-container" style="position: absolute; left: 50%; top: -20px; transform: translateX(-50%); pointer-events: none;"></div>
+
                     <button id="like-btn" class="btn {% if user in post.likes.all %}btn-primary{% else %}btn-outline-primary{% endif %} btn-lg rounded-pill px-5 shadow-sm" data-id="{{ post.pk }}">
                         <i class="bi {% if user in post.likes.all %}bi-hand-thumbs-up-fill{% else %}bi-hand-thumbs-up{% endif %}"></i>
                         点赞 <span id="like-count">{{ post.total_likes }}</span>
@@ -60,7 +62,6 @@
 
             <div class="comments-section mb-5">
                 <h4 class="fw-bold mb-4"><i class="bi bi-chat-dots-fill me-2 text-primary"></i>全部评论 ({{ post.comments.count }})</h4>
-
                 {% for comment in comments %}
                     <div class="card mb-3 border-0 shadow-sm" id="comment-{{ comment.id }}">
                         <div class="card-body">
@@ -69,22 +70,17 @@
                                     {% if comment.user.avatar %}
                                         <img src="{{ comment.user.avatar.url }}" class="rounded-circle me-3" style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #eee;">
                                     {% else %}
-                                        <div class="rounded-circle me-3 bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 45px; height: 45px;">
-                                            {{ comment.user.username|first|upper }}
-                                        </div>
+                                        <div class="rounded-circle me-3 bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 45px; height: 45px;">{{ comment.user.username|first|upper }}</div>
                                     {% endif %}
                                     <div>
                                         <div class="fw-bold text-dark">
                                             {{ comment.user.nickname|default:comment.user.username }}
-                                            <span class="badge rounded-pill bg-warning text-dark border ms-1 small" style="font-size: 0.65rem;">
-                                                Lv.{{ comment.user.level }}
-                                            </span>
+                                            <span class="badge rounded-pill bg-warning text-dark border ms-1 small" style="font-size: 0.65rem;">Lv.{{ comment.user.level }}</span>
                                         </div>
                                         <small class="text-muted">{{ comment.created_at|timesince }}前</small>
                                     </div>
                                 </div>
-                                <button class="btn btn-sm btn-link text-primary text-decoration-none"
-                                   onclick="prepareReply({{ comment.id }}, '{{ comment.user.nickname|default:comment.user.username }}')">
+                                <button class="btn btn-sm btn-link text-primary text-decoration-none" onclick="prepareReply({{ comment.id }}, '{{ comment.user.nickname|default:comment.user.username }}')">
                                     <i class="bi bi-reply"></i> 回复
                                 </button>
                             </div>
@@ -118,13 +114,10 @@
                     <form method="post" action="{% url 'blog:post_detail' post.pk %}">
                         {% csrf_token %}
                         <input type="hidden" name="parent_id" id="parent_id_input" value="">
-
                         {{ comment_form|crispy }}
-
                         <div class="d-flex align-items-center mt-3">
                             <button type="submit" class="btn btn-primary px-5 rounded-pill shadow">提交评论</button>
-                            <button type="button" id="cancel-reply-btn" class="btn btn-link text-muted ms-3 text-decoration-none"
-                                    style="display:none;" onclick="resetReplyForm()">取消回复</button>
+                            <button type="button" id="cancel-reply-btn" class="btn btn-link text-muted ms-3 text-decoration-none" style="display:none;" onclick="resetReplyForm()">取消回复</button>
                         </div>
                     </form>
                 {% else %}
@@ -135,25 +128,58 @@
                 {% endif %}
             </div>
         </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4 bg-white">
+                <div class="card-header bg-white fw-bold py-3"><i class="bi bi-grid-fill me-2 text-primary"></i>分类目录</div>
+                <div class="list-group list-group-flush">
+                    {% for cat in categories %}
+                        <a href="{% url 'blog:post_list' %}?category={{ cat.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-0 py-3">
+                            <span>{{ cat.name }}</span>
+                            <span class="badge bg-light text-muted border rounded-pill">{{ cat.post_set.count }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4 bg-white">
+                <div class="card-header bg-white fw-bold py-3"><i class="bi bi-fire me-2 text-danger"></i>热门推荐</div>
+                <div class="list-group list-group-flush">
+                    {% for hp in hot_posts %}
+                        <a href="{% url 'blog:post_detail' hp.pk %}" class="list-group-item list-group-item-action border-0 py-3">
+                            <div class="text-truncate small fw-bold mb-1">{{ hp.title }}</div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="bi bi-eye me-1"></i>{{ hp.views }}</small>
+                                <small class="text-muted">{{ hp.created_at|date:"Y-m-d" }}</small>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    // 回复功能逻辑
+    // 经验值动画
+    function animateXP(amount) {
+        const container = document.getElementById('xp-animation-container');
+        const xpEl = document.createElement('div');
+        xpEl.className = 'xp-float-text';
+        xpEl.innerText = '+' + amount + ' XP';
+        container.appendChild(xpEl);
+        setTimeout(() => xpEl.remove(), 1000);
+    }
+
     function prepareReply(commentId, displayName) {
         document.getElementById('parent_id_input').value = commentId;
         document.getElementById('reply-title').innerHTML = '<i class="bi bi-reply-fill"></i> 回复 <span class="text-primary">@' + displayName + '</span>';
         document.getElementById('cancel-reply-btn').style.display = "inline-block";
-
-        // 平滑滚动到表单
         window.scrollTo({
             top: document.getElementById('comment-form-at').offsetTop - 100,
             behavior: 'smooth'
         });
-
-        // 自动聚焦输入框
-        const textarea = document.querySelector('#comment-form-at textarea');
-        if(textarea) textarea.focus();
+        document.querySelector('#comment-form-at textarea').focus();
     }
 
     function resetReplyForm() {
@@ -185,6 +211,7 @@
                     if (data.action === 'liked') {
                         btn.classList.replace('btn-outline-primary', 'btn-primary');
                         icon.classList.replace('bi-hand-thumbs-up', 'bi-hand-thumbs-up-fill');
+                        animateXP(3); // 触发动画
                     } else {
                         btn.classList.replace('btn-primary', 'btn-outline-primary');
                         icon.classList.replace('bi-hand-thumbs-up-fill', 'bi-hand-thumbs-up');
@@ -204,7 +231,21 @@
     .post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     .post-content pre { background-color: #272822; color: #f8f8f2; padding: 20px; border-radius: 8px; overflow-x: auto; margin: 20px 0; }
     .badge { vertical-align: middle; }
-    /* 鼠标悬停卡片阴影加深 */
-    .card { transition: box-shadow 0.3s ease; }
+    .list-group-item:hover { background-color: #f8f9ff !important; }
+
+    /* XP 浮动动画样式 */
+    .xp-float-text {
+        position: absolute;
+        color: #ffc107;
+        font-weight: bold;
+        font-size: 1.5rem;
+        z-index: 100;
+        animation: floatUpAndFade 1s ease-out forwards;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    @keyframes floatUpAndFade {
+        0% { transform: translateY(0); opacity: 1; }
+        100% { transform: translateY(-60px); opacity: 0; }
+    }
 </style>
 {% endblock %}

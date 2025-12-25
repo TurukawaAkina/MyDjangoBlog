@@ -1,10 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Post, Category, Tag, Comment
-from .forms import CommentForm  # 确保你已经创建了 CommentForm
+from .forms import CommentForm
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse  # 用于点赞 AJAX
+from django.http import JsonResponse
 
 
 def post_list(request):
@@ -19,7 +19,7 @@ def post_list(request):
     if category_id:
         posts = posts.filter(category_id=category_id)
 
-    categories = Category.objects.all()
+    # 分页
     paginator = Paginator(posts, 5)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -28,9 +28,9 @@ def post_list(request):
     if category_id:
         current_category = get_object_or_404(Category, id=category_id)
 
+    # 这里的 hot_posts 和 categories 已由 context_processor 全局提供
     return render(request, 'blog/post_list.html', {
         'posts': page_obj,
-        'categories': categories,
         'search_query': search_query,
         'current_category': current_category
     })
@@ -46,7 +46,7 @@ def post_detail(request, pk):
     # 获取顶级评论
     comments = post.comments.filter(parent=None).order_by('-created_at')
 
-    # --- 处理评论逻辑 ---
+    # 处理评论逻辑
     if request.method == 'POST':
         if not request.user.is_authenticated:
             return redirect('login')
@@ -57,26 +57,24 @@ def post_detail(request, pk):
             comment.post = post
             comment.user = request.user
 
-            # 处理回复功能 (parent_id)
             parent_id = request.POST.get('parent_id')
             if parent_id:
                 comment.parent_id = parent_id
 
             comment.save()
 
-            # 增加经验值：评论 +5
+            # 增加经验值
             request.user.experience += 5
             request.user.save()
 
             return redirect('blog:post_detail', pk=post.pk)
     else:
-        # 这一步非常重要：实例化空表单发送给模板，否则输入框不显示
         form = CommentForm()
 
     return render(request, 'blog/post_detail.html', {
         'post': post,
         'comments': comments,
-        'comment_form': form  # 传给模板
+        'comment_form': form
     })
 
 
@@ -97,8 +95,8 @@ def post_create(request):
         )
         return redirect('blog:post_detail', pk=post.pk)
 
-    categories = Category.objects.all()
-    return render(request, 'blog/post_form.html', {'categories': categories})
+    # 注意：这里的 categories 也可以直接用全局的，但为了保持逻辑清晰暂留
+    return render(request, 'blog/post_form.html')
 
 
 @login_required
@@ -118,8 +116,7 @@ def post_edit(request, pk):
         post.save()
         return redirect('blog:post_detail', pk=post.pk)
 
-    categories = Category.objects.all()
-    return render(request, 'blog/post_form.html', {'post': post, 'categories': categories})
+    return render(request, 'blog/post_form.html', {'post': post})
 
 
 @login_required
@@ -132,9 +129,6 @@ def post_delete(request, pk):
 
 @login_required
 def post_like(request, pk):
-    """
-    修改点赞逻辑以支持 AJAX 异步请求
-    """
     post = get_object_or_404(Post, pk=pk)
     action = 'unliked'
 
@@ -143,17 +137,14 @@ def post_like(request, pk):
     else:
         post.likes.add(request.user)
         action = 'liked'
-        # 增加经验值：点赞 +3
         request.user.experience += 3
         request.user.save()
 
-    # 如果是 AJAX 请求则返回 JSON
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({
             'status': 'ok',
-            'count': post.total_likes(),  # 确保 Model 里有 total_likes 方法
+            'count': post.total_likes(),
             'action': action
         })
 
-    # 否则普通重定向
     return redirect('blog:post_detail', pk=pk)
