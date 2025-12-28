@@ -7,16 +7,73 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        /* 稍微美化一下导航栏 */
-        .navbar-brand { font-weight: bold; letter-spacing: 1px; }
-        .nav-link:hover { color: #ffc107 !important; transition: 0.3s; }
+        /* 1. 核心修改：窄版导航栏 + 磨砂玻璃效果 */
+        .navbar {
+            padding-top: 0.25rem !important;   /* 极致压缩上下边距 */
+            padding-bottom: 0.25rem !important;
+            background-color: rgba(33, 37, 41, 0.85) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 2. 页面占位修正 */
+        body {
+            padding-top: 60px;
+            background-color: #f8f9fa;
+        }
+
+        /* 3. 导航栏元素微调 */
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.05rem; /* 稍微缩小 Logo */
+        }
+
+        .nav-link {
+            font-size: 0.88rem;
+            transition: 0.3s;
+        }
+
+        /* 4. 搜索框极致窄化修改 */
+        .navbar .form-control {
+            height: 40px;              /* 强制限制高度 */
+            font-size: 0.9rem;         /* 缩小字体 */
+            padding: 0 0.8rem;        /* 压缩上下内边距 */
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 20px 0 0 20px; /* 圆角处理 */
+        }
+
+        .navbar .search-btn {
+            height: 40px;
+            padding: 0 0.8rem;
+            font-size: 0.8rem;
+            line-height: 1;
+            border-radius: 0 20px 20px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.2);
+            box-shadow: none;
+            border-color: #ffc107;
+        }
+
+        /* 5. 滚动后的阴影 */
+        .navbar.scrolled {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background-color: rgba(33, 37, 41, 0.95) !important;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
             <a class="navbar-brand" href="{% url 'blog:post_list' %}">
-                <i class="bi bi-cpu-fill me-2"></i>Django Blog
+                <i class="bi bi-cpu-fill me-2 text-warning"></i>Django Blog
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText">
                 <span class="navbar-toggler-icon"></span>
@@ -29,31 +86,35 @@
                 </ul>
 
                 <form class="d-flex me-3" action="{% url 'blog:post_list' %}" method="get">
-                    <input class="form-control me-2" type="search" placeholder="搜索文章..." name="search" value="{{ search_query|default:'' }}">
-                    <button class="btn btn-outline-light" type="submit">搜索</button>
+                    <div class="input-group">
+                        <input class="form-control" type="search" placeholder="搜索..." name="search" value="{{ search_query|default:'' }}">
+                        <button class="btn btn-outline-warning search-btn" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
                 </form>
 
                 <ul class="navbar-nav align-items-center">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'blog:post_create' %}">
+                            <a class="nav-link py-1" href="{% url 'blog:post_create' %}">
                                 <i class="bi bi-pencil-square me-1"></i>写文章
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'profile' %}">
+                            <a class="nav-link py-1" href="{% url 'profile' %}">
                                 <i class="bi bi-person-circle me-1"></i>个人中心 ({{ user.nickname|default:user.username }})
                             </a>
                         </li>
                         <li class="nav-item ms-lg-2">
                             <form action="{% url 'logout' %}" method="post" class="m-0">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-link nav-link border-0" style="vertical-align: baseline;">退出</button>
+                                <button type="submit" class="btn btn-link nav-link border-0 py-1" style="vertical-align: baseline; font-size: 0.88rem;">退出</button>
                             </form>
                         </li>
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">登录</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">注册</a></li>
+                        <li class="nav-item"><a class="nav-link text-warning" href="{% url 'register' %}">注册</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -65,5 +126,16 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 20) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
 </body>
 </html>

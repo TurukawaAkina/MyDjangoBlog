@@ -4,10 +4,48 @@
 {% block content %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
+<style>
+    body { background-color: #f8f9fa; }
+    .post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .post-content pre { background-color: #272822; color: #f8f8f2; padding: 20px; border-radius: 8px; overflow-x: auto; margin: 20px 0; }
+    .badge { vertical-align: middle; }
+    
+    /* 侧边栏优化：宽度平衡与字号恢复 */
+    .sidebar-wrapper {
+        /* 取消了硬性的宽度限制，让 col-md-3 自然发挥作用 */
+        padding-left: 10px; 
+    }
+    .sidebar-card .card-header {
+        font-size: 1rem; /* 恢复标准字号 */
+        padding: 0.75rem 1rem;
+    }
+    .sidebar-card .list-group-item {
+        padding: 0.7rem 1rem; /* 适中的上下间距 */
+        font-size: 0.95rem;    /* 恢复标准字号 */
+        border: none !important;
+    }
+    .sidebar-card .list-group-item:hover { background-color: #f8f9ff !important; color: #0d6efd !important; }
+
+    /* XP 浮动动画样式 */
+    .xp-float-text {
+        position: absolute;
+        color: #ffc107;
+        font-weight: bold;
+        font-size: 1.5rem;
+        z-index: 100;
+        animation: floatUpAndFade 1s ease-out forwards;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    @keyframes floatUpAndFade {
+        0% { transform: translateY(0); opacity: 1; }
+        100% { transform: translateY(-60px); opacity: 0; }
+    }
+</style>
+
 <div class="container mt-4">
     <div class="row">
-        <div class="col-md-8">
-            <article class="blog-post mb-5 shadow-sm p-4 bg-white rounded">
+        <div class="col-md-9">
+            <article class="blog-post mb-5 shadow-sm p-4 bg-white rounded border-0">
                 <h1 class="mb-3 fw-bold">{{ post.title }}</h1>
 
                 <div class="text-muted small mb-4 d-flex align-items-center justify-content-between">
@@ -17,7 +55,7 @@
                             <strong>{{ post.author.nickname|default:post.author.username }}</strong>
                             <span class="badge bg-warning text-dark border ms-1" title="等级">Lv.{{ post.author.level }}</span>
                             {% if post.author.custom_title %}
-                            <span class="badge" style="background-color: {{ post.author.custom_title.color }};">
+                            <span class="badge ms-1" style="background-color: {{ post.author.custom_title.color }};">
                                 <i class="{{ post.author.custom_title.icon_class }}"></i> {{ post.author.custom_title.name }}
                             </span>
                             {% endif %}
@@ -129,31 +167,33 @@
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 mb-4 bg-white">
-                <div class="card-header bg-white fw-bold py-3"><i class="bi bi-grid-fill me-2 text-primary"></i>分类目录</div>
-                <div class="list-group list-group-flush">
-                    {% for cat in categories %}
-                        <a href="{% url 'blog:post_list' %}?category={{ cat.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-0 py-3">
-                            <span>{{ cat.name }}</span>
-                            <span class="badge bg-light text-muted border rounded-pill">{{ cat.post_set.count }}</span>
-                        </a>
-                    {% endfor %}
+        <div class="col-md-3">
+            <div class="sidebar-wrapper">
+                <div class="card sidebar-card shadow-sm border-0 mb-4 bg-white">
+                    <div class="card-header bg-white fw-bold py-3"><i class="bi bi-grid-fill me-2 text-primary"></i>分类目录</div>
+                    <div class="list-group list-group-flush">
+                        {% for cat in categories %}
+                            <a href="{% url 'blog:post_list' %}?category={{ cat.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <span>{{ cat.name }}</span>
+                                <span class="badge bg-light text-muted border rounded-pill">{{ cat.post_set.count }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
 
-            <div class="card shadow-sm border-0 mb-4 bg-white">
-                <div class="card-header bg-white fw-bold py-3"><i class="bi bi-fire me-2 text-danger"></i>热门推荐</div>
-                <div class="list-group list-group-flush">
-                    {% for hp in hot_posts %}
-                        <a href="{% url 'blog:post_detail' hp.pk %}" class="list-group-item list-group-item-action border-0 py-3">
-                            <div class="text-truncate small fw-bold mb-1">{{ hp.title }}</div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted"><i class="bi bi-eye me-1"></i>{{ hp.views }}</small>
-                                <small class="text-muted">{{ hp.created_at|date:"Y-m-d" }}</small>
-                            </div>
-                        </a>
-                    {% endfor %}
+                <div class="card sidebar-card shadow-sm border-0 mb-4 bg-white">
+                    <div class="card-header bg-white fw-bold py-3"><i class="bi bi-fire me-2 text-danger"></i>热门推荐</div>
+                    <div class="list-group list-group-flush">
+                        {% for hp in hot_posts %}
+                            <a href="{% url 'blog:post_detail' hp.pk %}" class="list-group-item list-group-item-action">
+                                <div class="text-truncate fw-bold mb-1" style="font-size: 0.95rem;">{{ hp.title }}</div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted"><i class="bi bi-eye me-1"></i>{{ hp.views }}</small>
+                                    <small class="text-muted">{{ hp.created_at|date:"m-d" }}</small>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -161,7 +201,7 @@
 </div>
 
 <script>
-    // 经验值动画
+    // JS 逻辑保持不变
     function animateXP(amount) {
         const container = document.getElementById('xp-animation-container');
         const xpEl = document.createElement('div');
@@ -188,7 +228,6 @@
         document.getElementById('cancel-reply-btn').style.display = "none";
     }
 
-    // 点赞 AJAX 逻辑
     const likeBtn = document.getElementById('like-btn');
     if (likeBtn) {
         likeBtn.addEventListener('click', function(e) {
@@ -211,41 +250,15 @@
                     if (data.action === 'liked') {
                         btn.classList.replace('btn-outline-primary', 'btn-primary');
                         icon.classList.replace('bi-hand-thumbs-up', 'bi-hand-thumbs-up-fill');
-                        animateXP(3); // 触发动画
+                        animateXP(3);
                     } else {
                         btn.classList.replace('btn-primary', 'btn-outline-primary');
                         icon.classList.replace('bi-hand-thumbs-up-fill', 'bi-hand-thumbs-up');
                     }
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("操作失败，请重试");
-            });
+            .catch(error => console.error('Error:', error));
         });
     }
 </script>
-
-<style>
-    body { background-color: #f8f9fa; }
-    .post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .post-content pre { background-color: #272822; color: #f8f8f2; padding: 20px; border-radius: 8px; overflow-x: auto; margin: 20px 0; }
-    .badge { vertical-align: middle; }
-    .list-group-item:hover { background-color: #f8f9ff !important; }
-
-    /* XP 浮动动画样式 */
-    .xp-float-text {
-        position: absolute;
-        color: #ffc107;
-        font-weight: bold;
-        font-size: 1.5rem;
-        z-index: 100;
-        animation: floatUpAndFade 1s ease-out forwards;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    }
-    @keyframes floatUpAndFade {
-        0% { transform: translateY(0); opacity: 1; }
-        100% { transform: translateY(-60px); opacity: 0; }
-    }
-</style>
 {% endblock %}
