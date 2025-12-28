@@ -2,12 +2,67 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="col-md-8 offset-md-2">
-    <h2>{{ title }}</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form|crispy }}
-        <button type="submit" class="btn btn-primary mt-3">保存文章</button>
-    </form>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-body p-4">
+                    <h2 class="fw-bold mb-4 text-center">
+                        {% if post %}编辑文章{% else %}<i class="bi bi-pencil-square me-2 text-primary"></i>创作新文章{% endif %}
+                    </h2>
+                    <hr>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">文章标题</label>
+                            <input type="text" name="title" class="form-control form-control-lg" placeholder="请输入标题..." value="{{ post.title|default:'' }}" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">所属分类</label>
+                            <select name="category" class="form-select" required>
+                                <option value="" disabled {% if not post %}selected{% endif %}>请选择分类...</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat.id }}" {% if post.category.id == cat.id %}selected{% endif %}>
+                                        {{ cat.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">文章封面图</label>
+                            <input type="file" name="banner" class="form-control" accept="image/*">
+                            {% if post.banner %}
+                                <small class="text-muted d-block mt-2">当前封面：{{ post.banner.name }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">正文内容</label>
+                            <textarea name="content" class="form-control" rows="12" placeholder="支持 Markdown 或 HTML 格式..." required>{{ post.content|default:'' }}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm">
+                                {% if post %}保存修改{% else %}立即发布文章 (+20 XP){% endif %}
+                            </button>
+                            <a href="javascript:history.back()" class="btn btn-link text-muted mt-2">取消并返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    body { background-color: #f0f2f5; }
+    .card { border-radius: 15px; }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    }
+</style>
 {% endblock %}
