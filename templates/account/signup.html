@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-dark">开启博客之旅</h2>
+                        <p class="text-muted small">创建一个账号来发表您的精彩见解</p>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mb-4">
+                        <a href="{% provider_login_url 'github' %}" class="btn btn-dark btn-lg d-flex align-items-center justify-content-center py-2" style="font-size: 0.95rem;">
+                            <i class="bi bi-github me-2"></i> 使用 GitHub 快速注册
+                        </a>
+                        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger btn-lg d-flex align-items-center justify-content-center py-2" style="font-size: 0.95rem;">
+                            <i class="bi bi-google me-2"></i> 使用 Google 快速注册
+                        </a>
+                    </div>
+
+                    <div class="position-relative my-4">
+                        <hr class="text-muted">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">或填写信息注册</span>
+                    </div>
+
+                    <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-start d-block">{{ field.label }}</label>
+                                <input type="{{ field.field.widget.input_type }}" 
+                                       name="{{ field.name }}" 
+                                       class="form-control form-control-sm" 
+                                       placeholder="请输入{{ field.label }}"
+                                       {% if field.value %}value="{{ field.value }}"{% endif %}
+                                       required>
+                                
+                                {% if field.help_text %}
+                                    <div class="text-muted mt-1" style="font-size: 0.7rem;">{{ field.help_text|safe }}</div>
+                                {% endif %}
+
+                                {% if field.errors %}
+                                    {% for error in field.errors %}
+                                        <div class="text-danger x-small mt-1 text-start">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        {% if redirect_field_value %}
+                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                        {% endif %}
+
+                        <div class="d-grid mt-4">
+                            <button class="btn btn-primary shadow-sm py-2 fw-bold" type="submit">立即注册</button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="small text-muted mb-0">
+                            已经有账号了？ <a href="{% url 'account_login' %}" class="text-decoration-none fw-bold">直接登录</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 保持与登录页一致的 UI */
+    .card { border-radius: 20px !important; }
+    .form-control-sm { 
+        padding: 0.7rem; 
+        border-radius: 10px; 
+        border: 1px solid #e0e0e0;
+    }
+    .form-control-sm:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    }
+    .x-small { font-size: 0.75rem; }
+    
+    /* 隐藏 allauth 默认注入的一些奇怪样式（如果有） */
+    ul.errorlist { list-style: none; padding: 0; margin: 0; }
+</style>
+{% endblock %}

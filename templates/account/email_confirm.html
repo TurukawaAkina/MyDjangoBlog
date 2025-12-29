@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 rounded-4 p-5 text-center">
+                <h3 class="fw-bold mb-4">确认邮箱地址</h3>
+                
+                {% if confirmation %}
+                    <p class="text-muted">请点击下方按钮确认邮箱 <strong>{{ confirmation.email_address.email }}</strong></p>
+                    <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+                        {% csrf_token %}
+                        <div class="d-grid mt-4">
+                            <button class="btn btn-primary btn-lg shadow-sm" type="submit">确认激活</button>
+                        </div>
+                    </form>
+                {% else %}
+                    <p class="text-danger">确认链接已失效或已被使用。</p>
+                    <a href="{% url 'account_login' %}" class="btn btn-link">返回登录</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
