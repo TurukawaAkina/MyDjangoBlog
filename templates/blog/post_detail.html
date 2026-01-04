@@ -5,26 +5,27 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
 <style>
-    body { background-color: #f8f9fa; }
-    .post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .post-content pre { background-color: #272822; color: #f8f8f2; padding: 20px; border-radius: 8px; overflow-x: auto; margin: 20px 0; }
-    .badge { vertical-align: middle; }
+    /* 核心适配：移除 body 强制背景色，让 base.html 的背景图生效 */
+    body { background-color: transparent; }
+
+    /* 图片与代码块适配 */
+    .post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    .post-content pre { background-color: #1e1e1e; color: #dcdcdc; padding: 20px; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 1px solid var(--border-color); }
     
-    /* 侧边栏优化：宽度平衡与字号恢复 */
-    .sidebar-wrapper {
-        /* 取消了硬性的宽度限制，让 col-md-3 自然发挥作用 */
-        padding-left: 10px; 
-    }
-    .sidebar-card .card-header {
-        font-size: 1rem; /* 恢复标准字号 */
-        padding: 0.75rem 1rem;
-    }
+    /* 侧边栏样式微调 */
+    .sidebar-wrapper { padding-left: 10px; }
     .sidebar-card .list-group-item {
-        padding: 0.7rem 1rem; /* 适中的上下间距 */
-        font-size: 0.95rem;    /* 恢复标准字号 */
+        padding: 0.7rem 1rem;
+        font-size: 0.95rem;
+        background-color: transparent !important; /* 必须透明以显示卡片背景 */
         border: none !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        color: var(--text-color) !important;
     }
-    .sidebar-card .list-group-item:hover { background-color: #f8f9ff !important; color: #0d6efd !important; }
+    .sidebar-card .list-group-item:hover { 
+        background-color: rgba(255,255,255,0.05) !important; 
+        color: var(--theme-color) !important; 
+    }
 
     /* XP 浮动动画样式 */
     .xp-float-text {
@@ -34,26 +35,33 @@
         font-size: 1.5rem;
         z-index: 100;
         animation: floatUpAndFade 1s ease-out forwards;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     }
     @keyframes floatUpAndFade {
         0% { transform: translateY(0); opacity: 1; }
         100% { transform: translateY(-60px); opacity: 0; }
+    }
+
+    /* 针对评论框内 textarea 的深度定制 */
+    textarea.form-control {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-color) !important;
     }
 </style>
 
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-9">
-            <article class="blog-post mb-5 shadow-sm p-4 bg-white rounded border-0">
-                <h1 class="mb-3 fw-bold">{{ post.title }}</h1>
+            <article class="blog-post mb-5 shadow-lg p-4 card border-0 rounded">
+                <h1 class="mb-3 fw-bold" style="color: var(--title-color);">{{ post.title }}</h1>
 
-                <div class="text-muted small mb-4 d-flex align-items-center justify-content-between">
-                    <div>
+                <div class="small mb-4 d-flex align-items-center justify-content-between opacity-75">
+                    <div style="color: var(--text-color);">
                         <span class="me-3">
-                            <i class="bi bi-person text-primary"></i>
+                            <i class="bi bi-person" style="color: var(--theme-color);"></i>
                             <strong>{{ post.author.nickname|default:post.author.username }}</strong>
-                            <span class="badge bg-warning text-dark border ms-1" title="等级">Lv.{{ post.author.level }}</span>
+                            <span class="badge bg-warning text-dark border-0 ms-1">Lv.{{ post.author.level }}</span>
                             {% if post.author.custom_title %}
                             <span class="badge ms-1" style="background-color: {{ post.author.custom_title.color }};">
                                 <i class="{{ post.author.custom_title.icon_class }}"></i> {{ post.author.custom_title.name }}
@@ -62,28 +70,29 @@
                         </span>
                         <span class="me-3"><i class="bi bi-calendar3"></i> {{ post.created_at|date:"Y-m-d H:i" }}</span>
                         <span class="me-3"><i class="bi bi-folder2-open"></i>
-                            <a href="{% url 'blog:post_list' %}?category={{ post.category.id }}" class="text-decoration-none">
-                                <span class="badge bg-light text-dark border">{{ post.category.name }}</span>
+                            <a href="{% url 'blog:post_list' %}?category={{ post.category.id }}" class="text-decoration-none" style="color: var(--theme-color);">
+                                <span class="badge bg-secondary bg-opacity-25 text-white border-0">{{ post.category.name }}</span>
                             </a>
                         </span>
                     </div>
-                    <div>
+                    <div style="color: var(--text-color);">
                         <span class="me-2"><i class="bi bi-eye"></i> {{ post.views }} 次阅读</span>
                     </div>
                 </div>
 
                 {% if post.banner %}
-                <img src="{{ post.banner.url }}" class="img-fluid rounded mb-4 w-100" style="max-height: 450px; object-fit: cover;">
+                <img src="{{ post.banner.url }}" class="img-fluid rounded mb-4 w-100 shadow" style="max-height: 450px; object-fit: cover;">
                 {% endif %}
 
-                <div class="post-content lh-lg mb-5" style="font-size: 1.1rem; color: #2c3e50;">
+                <div class="post-content lh-lg mb-5" style="font-size: 1.1rem; color: var(--text-color);">
                     {{ post.get_content_html|safe }}
                 </div>
 
-                <div class="text-center my-5 border-top pt-4 position-relative">
+                <div class="text-center my-5 border-top border-secondary border-opacity-25 pt-4 position-relative">
                     <div id="xp-animation-container" style="position: absolute; left: 50%; top: -20px; transform: translateX(-50%); pointer-events: none;"></div>
 
-                    <button id="like-btn" class="btn {% if user in post.likes.all %}btn-primary{% else %}btn-outline-primary{% endif %} btn-lg rounded-pill px-5 shadow-sm" data-id="{{ post.pk }}">
+                    <button id="like-btn" class="btn btn-lg rounded-pill px-5 shadow-sm" 
+                            style="border: 2px solid var(--theme-color); color: {% if user in post.likes.all %}#fff{% else %}var(--theme-color){% endif %}; background-color: {% if user in post.likes.all %}var(--theme-color){% else %}transparent{% endif %};">
                         <i class="bi {% if user in post.likes.all %}bi-hand-thumbs-up-fill{% else %}bi-hand-thumbs-up{% endif %}"></i>
                         点赞 <span id="like-count">{{ post.total_likes }}</span>
                     </button>
@@ -91,77 +100,77 @@
                 </div>
 
                 {% if post.author == user %}
-                <div class="mt-4 pt-3 border-top text-end">
-                    <a href="{% url 'blog:post_edit' post.pk %}" class="btn btn-sm btn-outline-secondary me-2">编辑</a>
+                <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 text-end">
+                    <a href="{% url 'blog:post_edit' post.pk %}" class="btn btn-sm btn-outline-info me-2">编辑</a>
                     <a href="{% url 'blog:post_delete' post.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除这篇文章吗？')">删除</a>
                 </div>
                 {% endif %}
             </article>
 
             <div class="comments-section mb-5">
-                <h4 class="fw-bold mb-4"><i class="bi bi-chat-dots-fill me-2 text-primary"></i>全部评论 ({{ post.comments.count }})</h4>
+                <h4 class="fw-bold mb-4" style="color: var(--title-color);"><i class="bi bi-chat-dots-fill me-2" style="color: var(--theme-color);"></i>全部评论 ({{ post.comments.count }})</h4>
                 {% for comment in comments %}
                     <div class="card mb-3 border-0 shadow-sm" id="comment-{{ comment.id }}">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div class="d-flex align-items-center">
                                     {% if comment.user.avatar %}
-                                        <img src="{{ comment.user.avatar.url }}" class="rounded-circle me-3" style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #eee;">
+                                        <img src="{{ comment.user.avatar.url }}" class="rounded-circle me-3" style="width: 45px; height: 45px; object-fit: cover; border: 2px solid var(--border-color);">
                                     {% else %}
                                         <div class="rounded-circle me-3 bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 45px; height: 45px;">{{ comment.user.username|first|upper }}</div>
                                     {% endif %}
                                     <div>
-                                        <div class="fw-bold text-dark">
+                                        <div class="fw-bold" style="color: var(--theme-color);">
                                             {{ comment.user.nickname|default:comment.user.username }}
-                                            <span class="badge rounded-pill bg-warning text-dark border ms-1 small" style="font-size: 0.65rem;">Lv.{{ comment.user.level }}</span>
+                                            <span class="badge rounded-pill bg-warning text-dark border-0 ms-1 small" style="font-size: 0.65rem;">Lv.{{ comment.user.level }}</span>
                                         </div>
-                                        <small class="text-muted">{{ comment.created_at|timesince }}前</small>
+                                        <small class="opacity-50" style="color: var(--text-color);">{{ comment.created_at|timesince }}前</small>
                                     </div>
                                 </div>
-                                <button class="btn btn-sm btn-link text-primary text-decoration-none" onclick="prepareReply({{ comment.id }}, '{{ comment.user.nickname|default:comment.user.username }}')">
+                                <button class="btn btn-sm btn-link text-decoration-none" style="color: var(--theme-color);" onclick="prepareReply({{ comment.id }}, '{{ comment.user.nickname|default:comment.user.username }}')">
                                     <i class="bi bi-reply"></i> 回复
                                 </button>
                             </div>
-                            <p class="card-text ps-5" style="white-space: pre-wrap; color: #4a4a4a;">{{ comment.content }}</p>
+                            <p class="card-text ps-5" style="white-space: pre-wrap; color: var(--text-color);">{{ comment.content }}</p>
 
                             {% for reply in comment.replies.all %}
-                                <div class="ms-5 mt-3 p-3 bg-light rounded-3 border-start border-primary border-4">
+                                <div class="ms-5 mt-3 p-3 rounded-3 border-start border-4" style="background-color: rgba(255,255,255,0.05); border-color: var(--theme-color) !important;">
                                     <div class="d-flex align-items-center mb-2">
                                         {% if reply.user.avatar %}
                                             <img src="{{ reply.user.avatar.url }}" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover;">
                                         {% endif %}
-                                        <span class="fw-bold small text-dark">{{ reply.user.nickname|default:reply.user.username }}</span>
-                                        <small class="text-muted ms-2" style="font-size: 0.75rem;">{{ reply.created_at|date:"m-d H:i" }}</small>
+                                        <span class="fw-bold small" style="color: var(--text-color);">{{ reply.user.nickname|default:reply.user.username }}</span>
+                                        <small class="ms-2 opacity-50" style="font-size: 0.75rem; color: var(--text-color);">{{ reply.created_at|date:"m-d H:i" }}</small>
                                     </div>
-                                    <p class="mb-0 small text-secondary" style="white-space: pre-wrap;">{{ reply.content }}</p>
+                                    <p class="mb-0 small opacity-75" style="white-space: pre-wrap; color: var(--text-color);">{{ reply.content }}</p>
                                 </div>
                             {% endfor %}
                         </div>
                     </div>
                 {% empty %}
-                    <div class="text-center py-5 bg-white rounded shadow-sm text-muted">
+                    <div class="card p-5 text-center shadow-sm opacity-75">
                         <i class="bi bi-chat-square-text display-4"></i>
                         <p class="mt-3">评论可获得 5 点经验值，快来升级吧！</p>
                     </div>
                 {% endfor %}
             </div>
 
-            <div id="comment-form-at" class="card p-4 shadow-sm border-0 bg-white mb-5">
-                <h4 id="reply-title" class="fw-bold mb-4">发表评论</h4>
+            <div id="comment-form-at" class="card p-4 shadow-lg border-0 mb-5">
+                <h4 id="reply-title" class="fw-bold mb-4" style="color: var(--title-color);">发表评论</h4>
                 {% if user.is_authenticated %}
                     <form method="post" action="{% url 'blog:post_detail' post.pk %}">
                         {% csrf_token %}
                         <input type="hidden" name="parent_id" id="parent_id_input" value="">
                         {{ comment_form|crispy }}
                         <div class="d-flex align-items-center mt-3">
-                            <button type="submit" class="btn btn-primary px-5 rounded-pill shadow">提交评论</button>
+                            <button type="submit" class="btn px-5 rounded-pill shadow text-white" style="background-color: var(--theme-color);">提交评论</button>
                             <button type="button" id="cancel-reply-btn" class="btn btn-link text-muted ms-3 text-decoration-none" style="display:none;" onclick="resetReplyForm()">取消回复</button>
                         </div>
                     </form>
                 {% else %}
-                    <div class="text-center py-4 border rounded bg-light">
-                        <p class="mb-3 text-muted">登录后评论可赚取经验值！</p>
-                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary rounded-pill px-4">立即登录</a>
+                    <div class="text-center py-4 border border-secondary border-opacity-25 rounded" style="background-color: rgba(255,255,255,0.05);">
+                        <p class="mb-3 opacity-75">登录后评论可赚取经验值！</p>
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn rounded-pill px-4 text-white" style="background-color: var(--theme-color);">立即登录</a>
                     </div>
                 {% endif %}
             </div>
@@ -169,27 +178,31 @@
 
         <div class="col-md-3">
             <div class="sidebar-wrapper">
-                <div class="card sidebar-card shadow-sm border-0 mb-4 bg-white">
-                    <div class="card-header bg-white fw-bold py-3"><i class="bi bi-grid-fill me-2 text-primary"></i>分类目录</div>
+                <div class="card sidebar-card shadow-lg border-0 mb-4">
+                    <div class="card-header bg-transparent border-0 fw-bold py-3" style="color: var(--title-color);">
+                        <i class="bi bi-grid-fill me-2" style="color: var(--theme-color);"></i>分类目录
+                    </div>
                     <div class="list-group list-group-flush">
                         {% for cat in categories %}
-                            <a href="{% url 'blog:post_list' %}?category={{ cat.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <a href="{% url 'blog:post_list' %}?category={{ cat.id }}" class="list-group-item d-flex justify-content-between align-items-center">
                                 <span>{{ cat.name }}</span>
-                                <span class="badge bg-light text-muted border rounded-pill">{{ cat.post_set.count }}</span>
+                                <span class="badge bg-secondary bg-opacity-25 text-white border-0 rounded-pill">{{ cat.post_set.count }}</span>
                             </a>
                         {% endfor %}
                     </div>
                 </div>
 
-                <div class="card sidebar-card shadow-sm border-0 mb-4 bg-white">
-                    <div class="card-header bg-white fw-bold py-3"><i class="bi bi-fire me-2 text-danger"></i>热门推荐</div>
+                <div class="card sidebar-card shadow-lg border-0 mb-4">
+                    <div class="card-header bg-transparent border-0 fw-bold py-3" style="color: var(--title-color);">
+                        <i class="bi bi-fire me-2" style="color: #ff4d4d;"></i>热门推荐
+                    </div>
                     <div class="list-group list-group-flush">
                         {% for hp in hot_posts %}
-                            <a href="{% url 'blog:post_detail' hp.pk %}" class="list-group-item list-group-item-action">
-                                <div class="text-truncate fw-bold mb-1" style="font-size: 0.95rem;">{{ hp.title }}</div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted"><i class="bi bi-eye me-1"></i>{{ hp.views }}</small>
-                                    <small class="text-muted">{{ hp.created_at|date:"m-d" }}</small>
+                            <a href="{% url 'blog:post_detail' hp.pk %}" class="list-group-item">
+                                <div class="text-truncate fw-bold mb-1" style="font-size: 0.95rem; color: var(--text-color);">{{ hp.title }}</div>
+                                <div class="d-flex justify-content-between align-items-center opacity-50">
+                                    <small><i class="bi bi-eye me-1"></i>{{ hp.views }}</small>
+                                    <small>{{ hp.created_at|date:"m-d" }}</small>
                                 </div>
                             </a>
                         {% endfor %}
@@ -201,7 +214,6 @@
 </div>
 
 <script>
-    // JS 逻辑保持不变
     function animateXP(amount) {
         const container = document.getElementById('xp-animation-container');
         const xpEl = document.createElement('div');
@@ -213,7 +225,7 @@
 
     function prepareReply(commentId, displayName) {
         document.getElementById('parent_id_input').value = commentId;
-        document.getElementById('reply-title').innerHTML = '<i class="bi bi-reply-fill"></i> 回复 <span class="text-primary">@' + displayName + '</span>';
+        document.getElementById('reply-title').innerHTML = '<i class="bi bi-reply-fill"></i> 回复 <span style="color: var(--theme-color);">@' + displayName + '</span>';
         document.getElementById('cancel-reply-btn').style.display = "inline-block";
         window.scrollTo({
             top: document.getElementById('comment-form-at').offsetTop - 100,
@@ -248,11 +260,13 @@
                 if (data.status === 'ok') {
                     likeCount.innerText = data.count;
                     if (data.action === 'liked') {
-                        btn.classList.replace('btn-outline-primary', 'btn-primary');
+                        btn.style.backgroundColor = 'var(--theme-color)';
+                        btn.style.color = '#fff';
                         icon.classList.replace('bi-hand-thumbs-up', 'bi-hand-thumbs-up-fill');
                         animateXP(3);
                     } else {
-                        btn.classList.replace('btn-primary', 'btn-outline-primary');
+                        btn.style.backgroundColor = 'transparent';
+                        btn.style.color = 'var(--theme-color)';
                         icon.classList.replace('bi-hand-thumbs-up-fill', 'bi-hand-thumbs-up');
                     }
                 }

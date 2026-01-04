@@ -11,9 +11,9 @@
     <style>
         /* --- 全局变量定义 --- */
         :root {
-            /* 1. 背景与压暗控制 */
-            --bg-image: url('https://images.unsplash.com/photo-1497250681960-ef048c0ab947?q=80&w=1920');
-            --bg-overlay: rgba(0, 0, 0, 0);  /* 默认背景不压暗 */
+            /* 1. 背景与压暗控制 - 注意：路径前加了 / 确保详情页可用 */
+            --bg-image: url('/static/images/7E0B82F7-2464-4B44-9BD9-D0835572618C.png');
+            --bg-overlay: rgba(0, 0, 0, 0);
 
             /* 2. 默认主题色 */
             --theme-color: #0d6efd;
@@ -27,12 +27,12 @@
             --invert-icon: 0;
         }
 
-        /* 🌙 暗黑深度适配 (开启后背景图压暗，大框变黑) */
+        /* 🌙 暗黑深度适配 */
         body.dark-mode-active {
-            --bg-overlay: rgba(0, 0, 0, 0.5);   /* 背景压暗 50% */
-            --glass-bg: rgba(15, 15, 15, 0.92); /* 大框深度变黑 */
-            --text-color: #dcdcdc;              /* 文字浅灰，不扎眼 */
-            --title-color: #ffffff;             /* 标题纯白 */
+            --bg-overlay: rgba(0, 0, 0, 0.5);
+            --glass-bg: rgba(15, 15, 15, 0.92);
+            --text-color: #dcdcdc;
+            --title-color: #ffffff;
             --navbar-bg: rgba(0, 0, 0, 0.95);
             --border-color: rgba(255, 255, 255, 0.1);
             --invert-icon: 1;
@@ -40,11 +40,13 @@
 
         /* --- 基础布局 --- */
         body {
-            position: relative; /* 必须加，为了让背景蒙版定位 */
-            background-image: var(--bg-image);
-            background-attachment: fixed;
-            background-size: cover;
-            background-position: center;
+            position: relative;
+            /* 关键：使用 !important 确保不被子页面覆盖 */
+            background-image: var(--bg-image) !important;
+            background-attachment: fixed !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
             min-height: 100vh;
             padding-top: 75px;
             color: var(--text-color);
@@ -57,12 +59,12 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--bg-overlay);
-            z-index: -1; /* 在内容之下，在背景图之上 */
+            z-index: -1;
             transition: background-color 0.5s ease;
             pointer-events: none;
         }
 
-        /* --- 磨砂玻璃效果 (分类、推荐大框核心) --- */
+        /* --- 磨砂玻璃效果 --- */
         .card, .navbar, .footer-content, .modal-content, .list-group-item {
             background-color: var(--glass-bg) !important;
             backdrop-filter: blur(15px);
@@ -80,7 +82,6 @@
             text-decoration: none;
         }
 
-        /* 侧边栏列表内部样式 */
         .list-group-item {
             border-left: none !important;
             border-right: none !important;
@@ -129,16 +130,13 @@
             <a class="navbar-brand fw-bold" href="/">
                 <i class="bi bi-cpu-fill me-2"></i>Django Blog
             </a>
-
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText">
                 <span class="navbar-toggler-icon" style="filter: invert(0.5);"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="navbarText">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link active" href="/" style="color: var(--text-color);">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/" style="color: var(--text-color);">首页</a></li>
                 </ul>
-
                 <form class="d-flex mx-lg-4 my-2 my-lg-0" action="{% url 'blog:post_list' %}" method="get">
                     <div class="input-group">
                         <input class="form-control search-input" type="search" placeholder="搜索文章..." name="search" value="{{ search_query|default:'' }}">
@@ -147,14 +145,12 @@
                         </button>
                     </div>
                 </form>
-
                 <ul class="navbar-nav align-items-center">
                     <li class="nav-item me-2">
                         <button class="btn nav-link" data-bs-toggle="modal" data-bs-target="#settingsModal">
                             <i class="bi bi-gear-fill" style="color: var(--text-color); font-size: 1.2rem;"></i>
                         </button>
                     </li>
-
                     {% if user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'blog:post_create' %}" style="color: var(--text-color);">
@@ -243,12 +239,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // 关键：所有路径加了前缀斜杠 /
         const backgroundList = [
-            "static/images/7E0B82F7-2464-4B44-9BD9-D0835572618C.png",
-            "static/images/55E32058-9481-42A9-8A09-3D5BEA18D786_1_201_a.jpeg",
-            "static/images/0828B942-4350-4EF9-8FDA-09D853AB8F25_1_105_c.jpeg",
-            "static/images/51070941-0CD4-4F8C-AB93-069BBE08E66C.png",
-            "static/images/f129573fe64f3d35f26294a8b4f847e7.jpg"
+            "/static/images/7E0B82F7-2464-4B44-9BD9-D0835572618C.png",
+            "/static/images/55E32058-9481-42A9-8A09-3D5BEA18D786_1_201_a.jpeg",
+            "/static/images/0828B942-4350-4EF9-8FDA-09D853AB8F25_1_105_c.jpeg",
+            "/static/images/51070941-0CD4-4F8C-AB93-069BBE08E66C.png",
+            "/static/images/f129573fe64f3d35f26294a8b4f847e7.jpg"
         ];
         const colorList = ["#0d6efd", "#ffc107", "#198754", "#dc3545", "#6610f2", "#fd7e14"];
 
@@ -278,6 +275,7 @@
         }
 
         function setBackground(url) {
+            // 确保应用时包含根路径
             document.documentElement.style.setProperty('--bg-image', `url('${url}')`);
             localStorage.setItem('user_bg', url);
             document.querySelectorAll('.bg-thumb').forEach(el => {
